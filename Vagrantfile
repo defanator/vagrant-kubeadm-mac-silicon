@@ -1,7 +1,19 @@
 
 require "yaml"
+require "erb"
 vagrant_root = File.dirname(File.expand_path(__FILE__))
-settings = YAML.load_file "#{vagrant_root}/settings.yaml"
+
+def process_yaml(file_path)
+  yaml_content = File.read(file_path)
+  erb_template = ERB.new(yaml_content)
+  rendered_yaml = erb_template.result(binding)
+  YAML.safe_load(rendered_yaml, aliases: true)
+end
+
+# default control IP (migrated from settings.yaml)
+ENV['CONTROL_IP'] ||= '10.0.0.10'
+
+settings = process_yaml("#{vagrant_root}/settings.yaml")
 
 IP_SECTIONS = settings["network"]["control_ip"].match(/^([0-9.]+\.)([^.]+)$/)
 # First 3 octets including the trailing dot:

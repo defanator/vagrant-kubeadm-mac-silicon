@@ -1,0 +1,54 @@
+#!/usr/bin/env make -f
+
+TOPDIR := $(realpath $(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
+SELF := $(abspath $(lastword $(MAKEFILE_LIST)))
+
+OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+VMNETS := $(shell find "/Library/Preferences/VMware Fusion/" -type d -maxdepth 1 -name "vmnet*" -exec basename {} \;)
+
+.PHONY: help
+help: ## Show help message (list targets)
+	@awk 'BEGIN {FS = ":.*##"; printf "\nTargets:\n"} /^[$$()% 0-9a-zA-Z_-]+:.*?##/ {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}' $(SELF)
+
+SHOW_ENV_VARS = \
+	OS \
+	VMNETS
+
+show-var-%:
+	@{ \
+	escaped_v="$(subst ",\",$($*))" ; \
+	if [ -n "$$escaped_v" ]; then v="$$escaped_v"; else v="(undefined)"; fi; \
+	printf "%-15s %s\n" "$*" "$$v"; \
+	}
+
+show-env: $(addprefix show-var-, $(SHOW_ENV_VARS)) ## Show environment details
+
+show-netconf: ## Show VMware networking configuration
+	@cat "/Library/Preferences/VMware Fusion/networking"
+
+show-vmnet%-dhcp: ## Show DHCP config for a given vmnet
+	@cat "/Library/Preferences/VMware Fusion/vmnet$*/dhcpd.conf"
+
+show-vmnet%-nat: ## Show NAT config for a given vmnet
+	@cat "/Library/Preferences/VMware Fusion/vmnet$*/nat.conf"
+
+show-vmnet%-leases: ## Show lease table for a given vmnet
+	@cat /var/db/vmware/vmnet-dhcpd-vmnet$*.leases
+
+get-ip-from-vmnet%: ## Find control IP in a given vmnet
+	@{ \
+	set -e ; \
+	range="$$($(MAKE) -f $(SELF) show-vmnet$*-dhcp | grep range | awk '{print $$2}')" ; \
+	net="$${range%.*}" ; \
+	last_octet="$${range##*.}" ; \
+	if [ 10 -lt "$${last_octet}" ]; then printf "%s.10\n" "$${net}"; fi; \
+	}
+
+get-ip: ## Find control IP in any of existing vmnets
+	@{ \
+	set -e ; \
+	for vmnet in $(VMNETS); do $(MAKE) -f $(SELF) get-ip-from-$${vmnet}; done; \
+	}
+
+up-with-vmnet%: ## Create k8s cluster with control and worker IPs from a given vmnet
+	CONTROL_IP=$$($(MAKE) -f $(SELF) get-ip-from-vmnet$*) vagrant up
