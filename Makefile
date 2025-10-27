@@ -6,6 +6,8 @@ SELF := $(abspath $(lastword $(MAKEFILE_LIST)))
 OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 VMNETS := $(shell find "/Library/Preferences/VMware Fusion/" -type d -maxdepth 1 -name "vmnet*" -exec basename {} \;)
 
+VMNETS_RANDOMIZED := $(shell for w in $(VMNETS); do echo $$w; done | sort -R)
+
 .PHONY: help
 help: ## Show help message (list targets)
 	@awk 'BEGIN {FS = ":.*##"; printf "\nTargets:\n"} /^[$$()% 0-9a-zA-Z_-]+:.*?##/ {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}' $(SELF)
@@ -44,11 +46,14 @@ get-ip-from-vmnet%: ## Find control IP in a given vmnet
 	if [ 10 -lt "$${last_octet}" ]; then printf "%s.10\n" "$${net}"; fi; \
 	}
 
-get-ip: ## Find control IP in any of existing vmnets
+get-ip: ## Find control IP in any of existing vmnets (pick one from randomized order of vmnets)
 	@{ \
 	set -e ; \
-	for vmnet in $(VMNETS); do $(MAKE) -f $(SELF) get-ip-from-$${vmnet}; done; \
+	for vmnet in $(VMNETS_RANDOMIZED); do res=$$($(MAKE) -f $(SELF) get-ip-from-$${vmnet}); if [ -n "$$res" ]; then echo $$res; break; fi; done; \
 	}
 
 up-with-vmnet%: ## Create k8s cluster with control and worker IPs from a given vmnet
 	CONTROL_IP=$$($(MAKE) -f $(SELF) get-ip-from-vmnet$*) vagrant up
+
+up: ## Create k8s cluster with control and worker IPs from a random vmnet
+	CONTROL_IP=$$($(MAKE) -f $(SELF) get-ip) vagrant up
