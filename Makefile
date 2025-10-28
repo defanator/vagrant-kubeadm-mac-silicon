@@ -10,21 +10,28 @@ VMNETS_RANDOMIZED := $(shell for w in $(VMNETS); do echo $$w; done | sort -R)
 
 VMWARE_GUI ?= false
 
+LINKERD_CLI          := $(HOME)/.linkerd2/bin/linkerd
+LINKERD_CLI_VERSION  := edge-25.8.1
+LINKERD_HELM_VERSION := 2025.8.1
+
 .PHONY: help
 help: ## Show help message (list targets)
-	@awk 'BEGIN {FS = ":.*##"; printf "\nTargets:\n"} /^[$$()% 0-9a-zA-Z_-]+:.*?##/ {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}' $(SELF)
+	@awk 'BEGIN {FS = ":.*##"; printf "\nTargets:\n"} /^[$$()% 0-9a-zA-Z_-]+:.*?##/ {printf "  \033[36m%-19s\033[0m %s\n", $$1, $$2}' $(SELF)
 
 SHOW_ENV_VARS = \
 	OS \
 	OSARCH \
 	VMNETS \
-	VMWARE_GUI
+	VMWARE_GUI \
+	LINKERD_CLI \
+	LINKERD_CLI_VERSION \
+	LINKERD_HELM_VERSION
 
 show-var-%:
 	@{ \
 	escaped_v="$(subst ",\",$($*))" ; \
 	if [ -n "$$escaped_v" ]; then v="$$escaped_v"; else v="(undefined)"; fi; \
-	printf "%-15s %s\n" "$*" "$$v"; \
+	printf "%-21s %s\n" "$*" "$$v"; \
 	}
 
 .PHONY: show-env
@@ -109,6 +116,26 @@ reboot-forced: ## Reboot node VMs via "vagrant reload --force" (less graceful wa
 reset: ## Reset node VMs via "vmrun reset" (not graceful at all, beware)
 	./vm-helpers/reset-vmrun.sh
 
+$(LINKERD_CLI):
+	cd linkerd && export LINKERD_CLI_VERSION="$(LINKERD_CLI_VERSION)" && ./install-linkerd-cli.sh
+
+install-linkerd-cli: $(LINKERD_CLI) ## Install linkerd CLI
+
+.PHONY: install-linkerd
+install-linkerd: ## Install linkerd to k8s cluster
+	cd linkerd && export LINKERD_HELM_VERSION="$(LINKERD_HELM_VERSION)" && ./install-linkerd.sh
+
+.PHONY: check-linkerd
+check-linkerd: $(LINKERD_CLI) ## Check linkerd installation
+	$(LINKERD_CLI) check
+
+.PHONY: uninstall-linkerd
+uninstall-linkerd: $(LINKERD_CLI) ## Uninstall linkerd from k8s cluster
+	$(LINKERD_CLI) uninstall | kubectl delete -f -
+	helm -n linkerd uninstall linkerd-control-plane
+	helm -n linkerd uninstall linkerd-crds
+	kubectl delete namespace linkerd
+
 .PHONY: stop
 stop: ## Stop node VMs
 	vagrant halt
@@ -118,6 +145,8 @@ down: ## Destroy node VMs
 	vagrant destroy -f
 	rm -rf configs/
 	rm -f state.env
+	find linkerd/ -type f -name "*.crt" -delete
+	find linkerd/ -type f -name "*.key" -delete
 
 clean: down
 	rm -rf $(TOPDIR)/.vagrant
