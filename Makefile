@@ -69,7 +69,4 @@ stop: ## Stop node VMs
 .PHONY: down
 down: ## Destroy node VMs
 	vagrant destroy -f
-	rm -f kubeconfig
-
-kubeconfig: ## Fetch kubeconfig (super admin one) from controlplane
-	vagrant ssh controlplane -- "sudo cat /etc/kubernetes/super-admin.conf" > $@
+	rm -rf configs/
