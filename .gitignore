@@ -34,3 +34,7 @@ Temporary Items
 
 # saved env (CONTROL_IP)
 state.env
+
+# linkerd temporary files
+linkerd/*.crt
+linkerd/*.key
