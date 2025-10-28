@@ -46,6 +46,7 @@ Vagrant.configure("2") do |config|
     controlplane.vm.provider "vmware_fusion" do |vb|
         vb.cpus = settings["nodes"]["control"]["cpu"]
         vb.memory = settings["nodes"]["control"]["memory"]
+        vb.gui = true
     end
     controlplane.vm.provision "shell",
       env: {
@@ -79,6 +80,7 @@ Vagrant.configure("2") do |config|
       node.vm.provider "vmware_fusion" do |vb|
           vb.cpus = settings["nodes"]["workers"]["cpu"]
           vb.memory = settings["nodes"]["workers"]["memory"]
+          vb.gui = true
       end
       node.vm.provision "shell",
         env: {
