@@ -57,12 +57,29 @@ get-ip: ## Find control IP in any of existing vmnets (pick one from randomized o
 	for vmnet in $(VMNETS_RANDOMIZED); do res=$$($(MAKE) -f $(SELF) get-ip-from-$${vmnet}); if [ -n "$$res" ]; then echo $$res; break; fi; done; \
 	}
 
-up-from-vmnet%: ## Create k8s cluster with control and worker IPs from a given vmnet
-	CONTROL_IP=$$($(MAKE) -f $(SELF) get-ip-from-vmnet$*) vagrant up
+.PHONY: state-env
+state-env:
+	if [ ! -f state.env ]; then \
+		echo "export CONTROL_IP=$$($(MAKE) -f $(SELF) get-ip)" >state.env ; \
+		. ./state.env && echo "Selected CONTROL_IP: $$CONTROL_IP" ; \
+	else \
+		. ./state.env && echo "WARNING: reusing CONTROL_IP from state.env ($$CONTROL_IP)" >&2 ; \
+	fi
+
+state-env-from-vmnet%:
+	if [ ! -f state.env ]; then \
+		echo "export CONTROL_IP=$$($(MAKE) -f $(SELF) get-ip-from-vmnet$*)" >state.env ; \
+		. ./state.env && echo "Selected CONTROL_IP: $$CONTROL_IP" ; \
+	else \
+		. ./state.env && echo "WARNING: reusing CONTROL_IP from state.env ($$CONTROL_IP)" >&2 ; \
+	fi
+
+up-from-vmnet%: state-env-from-vmnet% ## Create k8s cluster with control and worker IPs from a given vmnet
+	. ./state.env && vagrant up
 
 .PHONY: up
-up: ## Create k8s cluster with control and worker IPs from a random vmnet
-	CONTROL_IP=$$($(MAKE) -f $(SELF) get-ip) vagrant up
+up: state-env ## Create k8s cluster with control and worker IPs from a random vmnet
+	. ./state.env && vagrant up
 
 .PHONY: stop
 stop: ## Stop node VMs
@@ -72,3 +89,6 @@ stop: ## Stop node VMs
 down: ## Destroy node VMs
 	vagrant destroy -f
 	rm -rf configs/
+	rm -f state.env
+
+clean: down
