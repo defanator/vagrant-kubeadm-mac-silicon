@@ -6,6 +6,9 @@ set -euxo pipefail
 
 # Variable Declaration
 
+# set hostname explicitly
+sudo hostnamectl set-hostname "${VM_NAME}"
+
 # DNS Setting
 if [ ! -d /etc/systemd/resolved.conf.d ]; then
 	sudo mkdir /etc/systemd/resolved.conf.d/
