@@ -23,8 +23,10 @@ show-var-%:
 	printf "%-15s %s\n" "$*" "$$v"; \
 	}
 
+.PHONY: show-env
 show-env: $(addprefix show-var-, $(SHOW_ENV_VARS)) ## Show environment details
 
+.PHONY: show-netconf
 show-netconf: ## Show VMware networking configuration
 	@cat "/Library/Preferences/VMware Fusion/networking"
 
@@ -46,14 +48,28 @@ get-ip-from-vmnet%: ## Find control IP in a given vmnet
 	if [ 10 -lt "$${last_octet}" ]; then printf "%s.10\n" "$${net}"; fi; \
 	}
 
+.PHONY: get-ip
 get-ip: ## Find control IP in any of existing vmnets (pick one from randomized order of vmnets)
 	@{ \
 	set -e ; \
 	for vmnet in $(VMNETS_RANDOMIZED); do res=$$($(MAKE) -f $(SELF) get-ip-from-$${vmnet}); if [ -n "$$res" ]; then echo $$res; break; fi; done; \
 	}
 
-up-with-vmnet%: ## Create k8s cluster with control and worker IPs from a given vmnet
+up-from-vmnet%: ## Create k8s cluster with control and worker IPs from a given vmnet
 	CONTROL_IP=$$($(MAKE) -f $(SELF) get-ip-from-vmnet$*) vagrant up
 
+.PHONY: up
 up: ## Create k8s cluster with control and worker IPs from a random vmnet
 	CONTROL_IP=$$($(MAKE) -f $(SELF) get-ip) vagrant up
+
+.PHONY: stop
+stop: ## Stop node VMs
+	vagrant halt
+
+.PHONY: down
+down: ## Destroy node VMs
+	vagrant destroy -f
+	rm -f kubeconfig
+
+kubeconfig: ## Fetch kubeconfig (super admin one) from controlplane
+	vagrant ssh controlplane -- "sudo cat /etc/kubernetes/super-admin.conf" > $@
