@@ -35,6 +35,8 @@ Vagrant.configure("2") do |config|
 
   config.vm.box_check_update = true
 
+  vmware_gui = ENV['VMWARE_GUI'] ? ENV['VMWARE_GUI'] : "false"
+
   config.vm.define "controlplane" do |controlplane|
     controlplane.vm.hostname = "controlplane"
     controlplane.vm.network "private_network", ip: settings["network"]["control_ip"]
@@ -46,7 +48,7 @@ Vagrant.configure("2") do |config|
     controlplane.vm.provider "vmware_fusion" do |vb|
         vb.cpus = settings["nodes"]["control"]["cpu"]
         vb.memory = settings["nodes"]["control"]["memory"]
-        vb.gui = true
+        vb.gui = vmware_gui
     end
     controlplane.vm.provision "shell",
       env: {
@@ -80,7 +82,7 @@ Vagrant.configure("2") do |config|
       node.vm.provider "vmware_fusion" do |vb|
           vb.cpus = settings["nodes"]["workers"]["cpu"]
           vb.memory = settings["nodes"]["workers"]["memory"]
-          vb.gui = true
+          vb.gui = vmware_gui
       end
       node.vm.provision "shell",
         env: {

@@ -5,8 +5,9 @@ SELF := $(abspath $(lastword $(MAKEFILE_LIST)))
 
 OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 VMNETS := $(shell find "/Library/Preferences/VMware Fusion/" -type d -maxdepth 1 -name "vmnet*" -exec basename {} \;)
-
 VMNETS_RANDOMIZED := $(shell for w in $(VMNETS); do echo $$w; done | sort -R)
+
+VMWARE_GUI ?= false
 
 .PHONY: help
 help: ## Show help message (list targets)
@@ -14,7 +15,8 @@ help: ## Show help message (list targets)
 
 SHOW_ENV_VARS = \
 	OS \
-	VMNETS
+	VMNETS \
+	VMWARE_GUI
 
 show-var-%:
 	@{ \
