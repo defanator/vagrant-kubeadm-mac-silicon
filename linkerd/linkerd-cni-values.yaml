@@ -1,0 +1,4 @@
+repairController:
+  enabled: true
+iptablesMode: nft
+logLevel: debug
