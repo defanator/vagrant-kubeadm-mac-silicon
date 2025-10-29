@@ -10,7 +10,7 @@ helm install linkerd-crds \
     -n linkerd \
     --create-namespace \
     --set installGatewayAPI=true \
-    --version ${LINKERD_HELM_VERSION} \
+    --version "${LINKERD_HELM_VERSION}" \
     linkerd-edge/linkerd-crds
 
 step certificate create root.linkerd.cluster.local ca.crt ca.key \
@@ -24,5 +24,5 @@ helm install linkerd-control-plane -n linkerd \
     --set-file identityTrustAnchorsPEM=ca.crt \
     --set-file identity.issuer.tls.crtPEM=issuer.crt \
     --set-file identity.issuer.tls.keyPEM=issuer.key \
-    --version ${LINKERD_HELM_VERSION} \
+    --version "${LINKERD_HELM_VERSION}" \
     linkerd-edge/linkerd-control-plane
