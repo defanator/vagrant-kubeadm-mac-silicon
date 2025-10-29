@@ -17,6 +17,7 @@ helm install linkerd-cni \
     -n linkerd-cni \
     --create-namespace \
     --version "${LINKERD_HELM_VERSION}" \
+    -f linkerd-cni-values.yaml \
     linkerd-edge/linkerd2-cni
 
 step certificate create root.linkerd.cluster.local ca.crt ca.key \
