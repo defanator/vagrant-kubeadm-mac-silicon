@@ -10,23 +10,14 @@ set -euxo pipefail
 sudo hostnamectl set-hostname "${VM_NAME}"
 
 # DNS Setting
-if [ ! -d /etc/systemd/resolved.conf.d ]; then
-	sudo mkdir /etc/systemd/resolved.conf.d/
-fi
-cat <<EOF | sudo tee /etc/systemd/resolved.conf.d/dns_servers.conf
-[Resolve]
-DNS=${DNS_SERVERS}
-EOF
-
-sudo systemctl restart systemd-resolved
+sudo sed -i "s/^nameserver .*/nameserver ${DNS_SERVERS}/" /etc/resolv.conf
 
 # disable swap
 sudo swapoff -a
 
-# keeps the swaf off during reboot
+# keeps the swap off during reboot
 (crontab -l 2>/dev/null; echo "@reboot /sbin/swapoff -a") | crontab - || true
-sudo apt-get update -y
-
+sudo yum update -y
 
 # Create the .conf file to load the modules at bootup
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
@@ -47,34 +38,28 @@ EOF
 # Apply sysctl params without reboot
 sudo sysctl --system
 
-## Install CRIO Runtime
+## Install containerd Runtime
 
-sudo apt-get update -y
-apt-get install -y software-properties-common curl apt-transport-https ca-certificates
-
-curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/Release.key |
-    gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
-echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /" |
-    tee /etc/apt/sources.list.d/cri-o.list
-
-sudo apt-get update -y
-sudo apt-get install -y cri-o
+sudo yum install -y curl ca-certificates cri-tools containerd iproute-tc
 
 sudo systemctl daemon-reload
-sudo systemctl enable crio --now
-sudo systemctl start crio.service
+sudo systemctl enable containerd --now
+sudo systemctl start containerd
 
-echo "CRI runtime installed susccessfully"
+echo "containerd runtime installed susccessfully"
 
-sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v$KUBERNETES_VERSION_SHORT/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v$KUBERNETES_VERSION_SHORT/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION_SHORT}/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION_SHORT}/rpm/repodata/repomd.xml.key
+#exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
+exclude=cri-tools
+EOF
 
-
-sudo apt-get update -y
-sudo apt-get install -y kubelet="$KUBERNETES_VERSION" kubectl="$KUBERNETES_VERSION" kubeadm="$KUBERNETES_VERSION"
-sudo apt-get update -y
-sudo apt-get install -y jq
+sudo yum install -y kubelet kubectl kubeadm jq
 
 local_ip="$(ip --json a s | jq -r '.[] | if .ifname == "eth1" then .addr_info[] | if .family == "inet" then .local else empty end else empty end')"
 cat > /etc/default/kubelet << EOF
