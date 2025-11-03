@@ -40,7 +40,13 @@ sudo sysctl --system
 
 ## Install containerd Runtime
 
-sudo yum install -y curl ca-certificates cri-tools containerd iproute-tc
+# mirror EKS setup with older AL2 images
+sudo yum install -y yum-plugin-versionlock
+sudo yum install -y runc-1.2.6-1.amzn2
+sudo yum install -y containerd-1.7.27-1.amzn2.0.3
+sudo yum versionlock add runc containerd
+
+sudo yum install -y curl ca-certificates cri-tools iproute-tc
 
 sudo systemctl daemon-reload
 sudo systemctl enable containerd --now
