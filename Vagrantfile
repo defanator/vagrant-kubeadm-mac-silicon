@@ -24,7 +24,6 @@ NUM_WORKER_NODES = settings["nodes"]["workers"]["count"]
 
 Vagrant.configure("2") do |config|
   config.vm.provision "shell", env: { "IP_NW" => IP_NW, "IP_START" => IP_START, "NUM_WORKER_NODES" => NUM_WORKER_NODES }, inline: <<-SHELL
-      apt-get update -y
       echo "$IP_NW$((IP_START)) controlplane" >> /etc/hosts
       for i in `seq 1 ${NUM_WORKER_NODES}`; do
         echo "$IP_NW$((IP_START+i)) node0${i}" >> /etc/hosts
