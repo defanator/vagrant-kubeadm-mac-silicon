@@ -30,6 +30,13 @@ Vagrant.configure("2") do |config|
       done
   SHELL
 
+  config.vm.provision "file", source: "scripts/ifup-local", destination: "/tmp/ifup-local"
+  config.vm.provision "file", source: "scripts/ifdown-local", destination: "/tmp/ifdown-local"
+  config.vm.provision "shell", inline: <<-SHELL
+      sudo install -m755 /tmp/ifup-local /sbin/
+      sudo install -m755 /tmp/ifdown-local /sbin/
+  SHELL
+
   config.vm.box = settings["software"]["box"]
 
   config.vm.box_check_update = true

@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+#
+
+set -eu
+
+DEV="$1"
+
+should_add_routes() {
+    local _local_ip_eth0="$(ip --json a s | jq -r '.[] | if .ifname == "eth0" then .addr_info[] | if .family == "inet" then .local else empty end else empty end')"
+    local _local_ip_eth1="$(ip --json a s | jq -r '.[] | if .ifname == "eth1" then .addr_info[] | if .family == "inet" then .local else empty end else empty end')"
+
+    if [ -z "${_local_ip_eth0}" ] || [ -z "${_local_ip_eth1}" ]; then
+        return 1
+    fi
+
+    local _net_eth0="${_local_ip_eth0%.*}"
+    local _net_eth1="${_local_ip_eth1%.*}"
+
+    if [ "${_net_eth0}" != "${_net_eth1}" ]; then
+        return 1
+    fi
+
+    return 0
+}
+
+add_routes() {
+    local _start_ip=$(grep controlplane /etc/hosts | awk '{print $1}')
+    local _local_ip="$(ip --json a s | jq -r '.[] | if .ifname == "eth1" then .addr_info[] | if .family == "inet" then .local else empty end else empty end')"
+    local _net="${_local_ip%.*}"
+    local _start_octet=${_start_ip##*.}
+
+    for i in $(seq 0 9); do
+        _addr_octet=$((_start_octet + i))
+        _target_ip="${_net}.${_addr_octet}"
+        if [ "${_target_ip}" = "${_local_ip}" ]; then
+            continue
+        fi
+        ip route add ${_target_ip}/32 dev eth1
+    done
+}
+
+case "${DEV}" in
+    eth1)
+        if should_add_routes; then
+            add_routes
+        fi
+        ;;
+esac
