@@ -21,6 +21,10 @@ sudo swapoff -a
 # keeps the swap off during reboot
 (crontab -l 2>/dev/null; echo "@reboot /sbin/swapoff -a") | crontab - || true
 sudo yum update -y
+sudo yum install -y jq
+
+# fix routing in case vagrant has created 2 interfaces sharing the same subnet
+sudo /sbin/ifup-local eth1
 
 # Create the .conf file to load the modules at bootup
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
@@ -68,7 +72,7 @@ gpgkey=https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION_SHORT}/rpm/repoda
 exclude=cri-tools
 EOF
 
-sudo yum install -y kubelet kubectl kubeadm jq
+sudo yum install -y kubelet kubectl kubeadm
 
 sudo systemctl enable kubelet --now
 
