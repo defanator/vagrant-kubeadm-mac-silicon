@@ -1,5 +1,5 @@
 repairController:
   enabled: true
   logLevel: debug
-iptablesMode: nft
+iptablesMode: legacy
 logLevel: debug
