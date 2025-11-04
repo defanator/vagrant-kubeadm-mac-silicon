@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+
+kind: DaemonSet
+
+metadata:
+  labels:
+    k8s-app: iptables-nft-installer
+  name: iptables-nft-installer
+  namespace: kube-system
+
+spec:
+  selector:
+    matchLabels:
+      k8s-app: iptables-nft-installer
+  template:
+    metadata:
+      labels:
+        k8s-app: iptables-nft-installer
+    spec:
+      priorityClassName: system-node-critical
+      tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
+      containers:
+      - name: package-installer
+        image: amazonlinux:2
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            set -ex
+            trap "exit 0" SIGTERM
+            echo "Installing iptables-nft on $(cat /host/etc/hostname)"
+            chroot /host yum install -y iptables-nft
+            set +x
+            while true; do sleep 3; done
+        volumeMounts:
+        - name: host-root
+          mountPath: /host
+      volumes:
+      - name: host-root
+        hostPath:
+          path: /
+          type: Directory
