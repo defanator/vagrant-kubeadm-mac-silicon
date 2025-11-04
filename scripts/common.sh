@@ -10,7 +10,10 @@ set -euxo pipefail
 sudo hostnamectl set-hostname "${VM_NAME}"
 
 # DNS Setting
-sudo sed -i "s/^nameserver .*/nameserver ${DNS_SERVERS}/" /etc/resolv.conf
+printf "search localdomain\n" >/etc/resolv.conf
+for ns in ${DNS_SERVERS}; do
+    printf "nameserver %s\n" "${ns}" >>/etc/resolv.conf
+done
 
 # disable swap
 sudo swapoff -a

@@ -1,1 +1,7 @@
 cniEnabled: true
+proxy:
+  nativeSidecar: true
+  logLevel: debug
+proxyInit:
+  logLevel: debug
+webhookFailurePolicy: Fail
