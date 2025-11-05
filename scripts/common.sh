@@ -4,6 +4,8 @@
 
 set -euxo pipefail
 
+. /etc/os-release
+
 # Variable Declaration
 
 # set hostname explicitly
@@ -59,13 +61,18 @@ sudo sysctl --system
 
 ## Install containerd Runtime
 
-# mirror EKS setup with older AL2 images
-sudo yum install -y yum-plugin-versionlock
-sudo yum install -y runc-1.2.6-1.amzn2
-sudo yum install -y containerd-1.7.27-1.amzn2.0.3
-sudo yum versionlock add runc containerd
-
-sudo yum install -y curl ca-certificates cri-tools iproute-tc
+if [ "${VERSION}" != "2023" ]; then
+    # mirror EKS setup with older AL2 images
+    sudo yum install -y yum-plugin-versionlock
+    sudo yum install -y runc-1.2.6-1.amzn2
+    sudo yum install -y containerd-1.7.27-1.amzn2.0.3
+    sudo yum versionlock add runc containerd
+    sudo yum install -y curl ca-certificates iproute-tc
+else
+    sudo yum install -y iptables-nft
+    sudo yum install -y runc containerd
+    sudo yum install -y curl-minimal ca-certificates iproute-tc
+fi
 
 sudo systemctl daemon-reload
 sudo systemctl enable containerd --now
@@ -81,10 +88,9 @@ enabled=1
 gpgcheck=1
 gpgkey=https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION_SHORT}/rpm/repodata/repomd.xml.key
 #exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
-exclude=cri-tools
 EOF
 
-sudo yum install -y kubelet kubectl kubeadm
+sudo yum install -y kubelet kubectl kubeadm cri-tools
 
 sudo systemctl enable kubelet --now
 
