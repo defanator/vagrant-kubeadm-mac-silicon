@@ -18,11 +18,13 @@ spec:
         k8s-app: iptables-nft-installer
     spec:
       priorityClassName: system-node-critical
+      hostPID: true
+      restartPolicy: Always
       tolerations:
       - key: "node-role.kubernetes.io/control-plane"
         operator: "Exists"
         effect: "NoSchedule"
-      containers:
+      initContainers:
       - name: package-installer
         image: amazonlinux:2
         imagePullPolicy: IfNotPresent
@@ -32,11 +34,8 @@ spec:
         args:
           - |
             set -ex
-            trap "exit 0" SIGTERM
             echo "Installing iptables-nft on $(cat /host/etc/hostname)"
             chroot /host yum install -y iptables-nft
-            set +x
-            while true; do sleep 3; done
         volumeMounts:
         - name: host-root
           mountPath: /host
@@ -45,3 +44,16 @@ spec:
         hostPath:
           path: /
           type: Directory
+      containers:
+      - image: amazonlinux:2
+        name: pause
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            trap "exit 0" SIGTERM
+            echo "Sleeping..."
+            while true; do sleep 3; done
