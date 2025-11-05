@@ -25,7 +25,7 @@ NUM_AL2023_WORKER_NODES = settings["nodes"]["al2023_workers"]["count"]
 NUM_WORKER_NODES_TOTAL = NUM_WORKER_NODES + NUM_AL2023_WORKER_NODES
 
 Vagrant.configure("2") do |config|
-  config.vm.provision "shell", env: { "IP_NW" => IP_NW, "IP_START" => IP_START, "NUM_WORKER_NODES" => NUM_WORKER_NODES }, inline: <<-SHELL
+  config.vm.provision "shell", env: { "IP_NW" => IP_NW, "IP_START" => IP_START, "NUM_WORKER_NODES_TOTAL" => NUM_WORKER_NODES_TOTAL }, inline: <<-SHELL
       echo "$IP_NW$((IP_START)) controlplane" >> /etc/hosts
       for i in `seq 1 ${NUM_WORKER_NODES_TOTAL}`; do
         echo "$IP_NW$((IP_START+i)) node0${i}" >> /etc/hosts
@@ -113,7 +113,7 @@ Vagrant.configure("2") do |config|
 
   end
 
-  (NUM_WORKER_NODES..NUM_WORKER_NODES_TOTAL).each do |i|
+  (NUM_WORKER_NODES+1..NUM_WORKER_NODES_TOTAL).each do |i|
 
     config.vm.define "node0#{i}" do |node|
       node.vm.box = settings["software"]["al2023_box"]

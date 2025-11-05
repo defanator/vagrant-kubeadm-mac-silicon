@@ -5,9 +5,11 @@ set -eu
 
 DEV="$1"
 
+_IFACES=($(ip --json a s | jq -r '.[] | select(.flags | any(. == "LOOPBACK") | not) | select(.flags | any(. == "POINTOPOINT") | not) | .ifname'))
+
 should_delete_routes() {
-    local _local_ip_eth0="$(ip --json a s | jq -r '.[] | if .ifname == "eth0" then .addr_info[] | if .family == "inet" then .local else empty end else empty end')"
-    local _local_ip_eth1="$(ip --json a s | jq -r '.[] | if .ifname == "eth1" then .addr_info[] | if .family == "inet" then .local else empty end else empty end')"
+    local _local_ip_eth0="$(ip --json a s | jq -r ".[] | if .ifname == \"${_IFACES[0]}\" then .addr_info[] | if .family == \"inet\" then .local else empty end else empty end")"
+    local _local_ip_eth1="$(ip --json a s | jq -r ".[] | if .ifname == \"${_IFACES[1]}\" then .addr_info[] | if .family == \"inet\" then .local else empty end else empty end")"
 
     if [ -z "${_local_ip_eth0}" ] || [ -z "${_local_ip_eth1}" ]; then
         return 1
@@ -25,7 +27,7 @@ should_delete_routes() {
 
 delete_routes() {
     local _start_ip=$(grep controlplane /etc/hosts | awk '{print $1}')
-    local _local_ip="$(ip --json a s | jq -r '.[] | if .ifname == "eth1" then .addr_info[] | if .family == "inet" then .local else empty end else empty end')"
+    local _local_ip="$(ip --json a s | jq -r ".[] | if .ifname == \"${_IFACES[1]}\" then .addr_info[] | if .family == \"inet\" then .local else empty end else empty end")"
     local _net="${_local_ip%.*}"
     local _start_octet=${_start_ip##*.}
 
@@ -35,12 +37,12 @@ delete_routes() {
         if [ "${_target_ip}" = "${_local_ip}" ]; then
             continue
         fi
-        ip route del ${_target_ip}/32 dev eth1
+        ip route del ${_target_ip}/32 dev ${_IFACES[1]}
     done
 }
 
 case "${DEV}" in
-    eth1)
+    ${_IFACES[1]})
         if should_delete_routes; then
             delete_routes
         fi

@@ -38,7 +38,8 @@ sudo yum update -y
 sudo yum install -y jq
 
 # fix routing in case vagrant has created 2 interfaces sharing the same subnet
-sudo /sbin/ifup-local eth1
+_IFACES=($(ip --json a s | jq -r '.[] | select(.flags | any(. == "LOOPBACK") | not) | select(.flags | any(. == "POINTOPOINT") | not) | .ifname'))
+sudo /sbin/ifup-local "${_IFACES[1]}"
 
 # Create the .conf file to load the modules at bootup
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
