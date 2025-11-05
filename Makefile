@@ -134,9 +134,9 @@ uninstall-linkerd: $(LINKERD_CLI) ## Uninstall linkerd from k8s cluster
 	helm -n linkerd uninstall linkerd
 	helm -n linkerd-cni uninstall linkerd-cni
 	helm -n linkerd uninstall linkerd-crds
-	$(LINKERD_CLI) uninstall | kubectl delete -f -
 	kubectl delete namespace linkerd-cni
 	kubectl delete namespace linkerd
+	$(LINKERD_CLI) uninstall | kubectl delete -f -
 
 .PHONY: stop
 stop: ## Stop node VMs
