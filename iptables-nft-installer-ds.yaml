@@ -45,15 +45,9 @@ spec:
           path: /
           type: Directory
       containers:
-      - image: amazonlinux:2
+      - image: registry.k8s.io/pause:3.5
         name: pause
         securityContext:
           allowPrivilegeEscalation: false
           runAsUser: 1000
           readOnlyRootFilesystem: true
-        command: ["/bin/bash", "-c"]
-        args:
-          - |
-            trap "exit 0" SIGTERM
-            echo "Sleeping..."
-            while true; do sleep 3; done
