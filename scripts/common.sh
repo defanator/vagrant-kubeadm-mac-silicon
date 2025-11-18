@@ -11,6 +11,13 @@ set -euxo pipefail
 # set hostname explicitly
 sudo hostnamectl set-hostname "${VM_NAME}"
 
+# disable systemd-resolved on AL2023
+if [ "${VERSION}" = "2023" ]; then
+    systemctl disable systemd-resolved
+    systemctl stop systemd-resolved
+    rm -f /etc/resolv.conf
+fi
+
 # DNS Setting
 printf "search localdomain\n" >/etc/resolv.conf
 for ns in ${DNS_SERVERS}; do
