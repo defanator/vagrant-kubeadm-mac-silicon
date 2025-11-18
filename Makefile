@@ -30,7 +30,11 @@ show-env: $(addprefix show-var-, $(SHOW_ENV_VARS)) ## Show environment details
 
 .PHONY: show-netconf
 show-netconf: ## Show VMware networking configuration
-	@cat "/Library/Preferences/VMware Fusion/networking"
+	@{ \
+	set -x ; \
+	cat "/Library/Preferences/VMware Fusion/networking" ; \
+	vmrun listHostNetworks ; \
+	}
 
 show-vmnet%-dhcp: ## Show DHCP config for a given vmnet
 	@cat "/Library/Preferences/VMware Fusion/vmnet$*/dhcpd.conf"
