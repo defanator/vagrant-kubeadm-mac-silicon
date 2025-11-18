@@ -15,6 +15,18 @@ for ns in ${DNS_SERVERS}; do
     printf "nameserver %s\n" "${ns}" >>/etc/resolv.conf
 done
 
+# disable overwriting resolv.conf from DHCP
+sudo mkdir -p /etc/dhcp/dhclient-enter-hooks.d
+cat <<EOF | sudo tee /etc/dhcp/dhclient-enter-hooks.d/skip-resolv-conf-update.sh
+#!/bin/sh
+
+make_resolv_conf() {
+    # skip any manipulations with /etc/resolv.conf
+    return
+}
+EOF
+sudo chmod +x /etc/dhcp/dhclient-enter-hooks.d/skip-resolv-conf-update.sh
+
 # disable swap
 sudo swapoff -a
 
