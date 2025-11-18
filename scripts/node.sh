@@ -17,7 +17,7 @@ sudo cp -i $config_path/config /home/vagrant/.kube/
 sudo chown 1000:1000 /home/vagrant/.kube/config
 NODENAME=$(hostname -s)
 
-kubectl wait node/\${NODENAME} --for=condition=Ready
+kubectl wait node/\${NODENAME} --for=create
 
 kubectl label node \${NODENAME} node-role.kubernetes.io/worker=worker
 EOF
