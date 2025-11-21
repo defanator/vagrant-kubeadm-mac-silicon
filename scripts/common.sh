@@ -10,6 +10,9 @@ set -euxo pipefail
 sudo hostnamectl set-hostname "${VM_NAME}"
 
 # DNS Setting
+systemctl disable systemd-resolved
+systemctl stop systemd-resolved
+rm -f /etc/resolv.conf
 printf "search localdomain\n" >/etc/resolv.conf
 for ns in ${DNS_SERVERS}; do
     printf "nameserver %s\n" "${ns}" >>/etc/resolv.conf
@@ -36,7 +39,8 @@ sudo yum update -y
 sudo yum install -y jq
 
 # fix routing in case vagrant has created 2 interfaces sharing the same subnet
-sudo /sbin/ifup-local eth1
+_IFACES=($(ip --json a s | jq -r '.[] | select(.flags | any(. == "LOOPBACK") | not) | select(.flags | any(. == "POINTOPOINT") | not) | .ifname'))
+sudo /sbin/ifup-local "${_IFACES[1]}"
 
 # Create the .conf file to load the modules at bootup
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
@@ -59,13 +63,9 @@ sudo sysctl --system
 
 ## Install containerd Runtime
 
-# mirror EKS setup with older AL2 images
-sudo yum install -y yum-plugin-versionlock
-sudo yum install -y runc-1.2.6-1.amzn2
-sudo yum install -y containerd-1.7.27-1.amzn2.0.3
-sudo yum versionlock add runc containerd
-
-sudo yum install -y curl ca-certificates cri-tools iproute-tc
+sudo yum install -y iptables-nft
+sudo yum install -y runc containerd
+sudo yum install -y curl-minimal ca-certificates iproute-tc
 
 sudo systemctl daemon-reload
 sudo systemctl enable containerd --now
@@ -80,11 +80,9 @@ baseurl=https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION_SHORT}/rpm/
 enabled=1
 gpgcheck=1
 gpgkey=https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION_SHORT}/rpm/repodata/repomd.xml.key
-#exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
-exclude=cri-tools
 EOF
 
-sudo yum install -y kubelet kubectl kubeadm
+sudo yum install -y kubelet kubectl kubeadm cri-tools
 
 sudo systemctl enable kubelet --now
 
