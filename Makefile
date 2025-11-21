@@ -86,11 +86,15 @@ up: state-env ## Create k8s cluster with control and worker IPs from a random vm
 	. ./state.env && vagrant up
 
 .PHONY: reboot
-reboot: ## Reboot VMs via vagrant ssh
-	./vm-helpers/reboot-vagrant.sh
+reboot: ## Reboot node VMs via "vagrant reload" (most graceful way)
+	. ./state.env && ./vm-helpers/reboot-vagrant.sh
+
+.PHONY: reboot-forced
+reboot-forced: ## Reboot node VMs via "vagrant reload --force" (less graceful way)
+	. ./state.env && ./vm-helpers/reboot-vagrant.sh --force
 
 .PHONY: reset
-reset: ## Reset VMs via vmrun reset
+reset: ## Reset node VMs via "vmrun reset" (not graceful at all, beware)
 	./vm-helpers/reset-vmrun.sh
 
 .PHONY: stop
