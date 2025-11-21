@@ -85,6 +85,14 @@ up-from-vmnet%: state-env-from-vmnet% ## Create k8s cluster with control and wor
 up: state-env ## Create k8s cluster with control and worker IPs from a random vmnet
 	. ./state.env && vagrant up
 
+.PHONY: reboot
+reboot: ## Reboot VMs via vagrant ssh
+	./vm-helpers/reboot-vagrant.sh
+
+.PHONY: reset
+reset: ## Reset VMs via vmrun reset
+	./vm-helpers/reset-vmrun.sh
+
 .PHONY: stop
 stop: ## Stop node VMs
 	vagrant halt
