@@ -35,7 +35,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.box_check_update = true
 
-  vmware_gui = ENV['VMWARE_GUI'] ? ENV['VMWARE_GUI'] : "false"
+  vmware_gui = ENV['VMWARE_GUI'] && ENV['VMWARE_GUI'].downcase == 'true' ? true : false
 
   config.vm.define "controlplane" do |controlplane|
     controlplane.vm.hostname = "controlplane"
@@ -104,4 +104,4 @@ Vagrant.configure("2") do |config|
     end
 
   end
-end 
+end

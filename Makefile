@@ -4,6 +4,7 @@ TOPDIR := $(realpath $(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 SELF := $(abspath $(lastword $(MAKEFILE_LIST)))
 
 OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+OSARCH := $(shell uname -m)
 VMNETS := $(shell find "/Library/Preferences/VMware Fusion/" -type d -maxdepth 1 -name "vmnet*" -exec basename {} \;)
 VMNETS_RANDOMIZED := $(shell for w in $(VMNETS); do echo $$w; done | sort -R)
 
@@ -15,6 +16,7 @@ help: ## Show help message (list targets)
 
 SHOW_ENV_VARS = \
 	OS \
+	OSARCH \
 	VMNETS \
 	VMWARE_GUI
 
@@ -65,6 +67,7 @@ get-ip: ## Find control IP in any of existing vmnets (pick one from randomized o
 state-env:
 	if [ ! -f state.env ]; then \
 		echo "export CONTROL_IP=$$($(MAKE) -f $(SELF) get-ip)" >state.env ; \
+		echo "export VMWARE_GUI=$(VMWARE_GUI)" >>state.env ; \
 		. ./state.env && echo "Selected CONTROL_IP: $$CONTROL_IP" ; \
 	else \
 		. ./state.env && echo "WARNING: reusing CONTROL_IP from state.env ($$CONTROL_IP)" >&2 ; \
@@ -73,6 +76,7 @@ state-env:
 state-env-from-vmnet%:
 	if [ ! -f state.env ]; then \
 		echo "export CONTROL_IP=$$($(MAKE) -f $(SELF) get-ip-from-vmnet$*)" >state.env ; \
+		echo "export VMWARE_GUI=$(VMWARE_GUI)" >>state.env ; \
 		. ./state.env && echo "Selected CONTROL_IP: $$CONTROL_IP" ; \
 	else \
 		. ./state.env && echo "WARNING: reusing CONTROL_IP from state.env ($$CONTROL_IP)" >&2 ; \
@@ -108,3 +112,4 @@ down: ## Destroy node VMs
 	rm -f state.env
 
 clean: down
+	rm -rf $(TOPDIR)/.vagrant
