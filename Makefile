@@ -38,13 +38,13 @@ show-netconf: ## Show VMware networking configuration
 	vmrun listHostNetworks ; \
 	}
 
+show-vmnet%-nat: ## Show NAT config for a given vmnet (assuming VNIC is configured in NAT mode)
+	@cat "/Library/Preferences/VMware Fusion/vmnet$*/nat.conf"
+
 show-vmnet%-dhcp: ## Show DHCP config for a given vmnet
 	@cat "/Library/Preferences/VMware Fusion/vmnet$*/dhcpd.conf"
 
-show-vmnet%-nat: ## Show NAT config for a given vmnet
-	@cat "/Library/Preferences/VMware Fusion/vmnet$*/nat.conf"
-
-show-vmnet%-leases: ## Show lease table for a given vmnet
+show-vmnet%-leases: ## Show DHCP lease table for a given vmnet
 	@cat /var/db/vmware/vmnet-dhcpd-vmnet$*.leases
 
 get-ip-from-vmnet%: ## Find control IP in a given vmnet
