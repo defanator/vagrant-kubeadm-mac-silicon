@@ -91,7 +91,7 @@ up: state-env ## Create k8s cluster with control and worker IPs from a random vm
 
 .PHONY: status
 status: ## Show node VMs status via "vagrant status"
-	. ./state.env && vagrant status
+	[ -f ./state.env ] && . ./state.env && vagrant status || vagrant status
 
 .PHONY: status-vmrun
 status-vmrun: ## Show node VMs status via "vmrun"
