@@ -1,0 +1,33 @@
+cluster:
+  name: "mycluster"
+
+global:
+  scrapeInterval: 60s
+
+destinations:
+  prometheus:
+    type: "prometheus"
+    url: "http://localhost/api/prom/push"
+
+clusterMetrics:
+  enabled: true
+
+collectors:
+  alloy-metrics:
+    presets:
+      - clustered
+      - statefulset
+    serviceAccount:
+      create: false
+      name: foo
+    alloy:
+      extraEnv:
+        - name: FOO
+          value: "bar"
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+
+alloy-operator:
+  deploy: true
