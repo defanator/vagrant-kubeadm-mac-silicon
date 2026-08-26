@@ -11,8 +11,8 @@ VMNETS_RANDOMIZED := $(shell for w in $(VMNETS); do echo $$w; done | sort -R)
 VMWARE_GUI ?= false
 
 LINKERD_CLI          := $(HOME)/.linkerd2/bin/linkerd
-LINKERD_CLI_VERSION  := edge-25.8.1
-LINKERD_HELM_VERSION := 2025.8.1
+LINKERD_CLI_VERSION  := edge-26.6.3
+LINKERD_HELM_VERSION := 2026.6.3
 
 .PHONY: help
 help: ## Show help message (list targets)
