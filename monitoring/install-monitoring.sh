@@ -27,10 +27,11 @@ helm install gkm grafana/k8s-monitoring \
   --values monitoring/gkm-values.yaml
 
 GRAFANA_NODE_PORT="$(kubectl -n monitoring get svc grafana -o jsonpath='{.spec.ports[0].nodePort}')"
+FIRST_WORKER_NODE_IP="$(kubectl get nodes -l '!node-role.kubernetes.io/control-plane' -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')"
+
+set +x
 
 echo "Prometheus, Loki, and Grafana are deployed in namespace monitoring."
 echo "Grafana NodePort: ${GRAFANA_NODE_PORT}"
-echo "Get a node IP with: kubectl get nodes -o wide"
-echo "Access Grafana at: http://<NODE_IP>:${GRAFANA_NODE_PORT}"
-echo "Default Grafana credentials: admin / admin"
+echo "Access Grafana at: http://${FIRST_WORKER_NODE_IP}:${GRAFANA_NODE_PORT}"
 echo "Anonymous Grafana access is enabled with Admin role."
