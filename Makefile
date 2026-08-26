@@ -16,7 +16,7 @@ LINKERD_HELM_VERSION := 2025.8.1
 
 .PHONY: help
 help: ## Show help message (list targets)
-	@awk 'BEGIN {FS = ":.*##"; printf "\nTargets:\n"} /^[$$()% 0-9a-zA-Z_-]+:.*?##/ {printf "  \033[36m%-19s\033[0m %s\n", $$1, $$2}' $(SELF)
+	@awk 'BEGIN {FS = ":.*##"; printf "\nTargets:\n"} /^[$$()% 0-9a-zA-Z_-]+:.*?##/ {printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}' $(SELF)
 
 SHOW_ENV_VARS = \
 	OS \
@@ -137,6 +137,14 @@ uninstall-linkerd: $(LINKERD_CLI) ## Uninstall linkerd from k8s cluster
 	$(LINKERD_CLI) uninstall | kubectl delete -f -
 	kubectl delete namespace linkerd-cni
 	kubectl delete namespace linkerd
+
+.PHONY: install-monitoring
+install-monitoring: ## Install monitoring stack
+	./monitoring/install-monitoring.sh
+
+.PHONY: uninstall-monitoring
+uninstall-monitoring: ## Uninstall monitoring stack
+	./monitoring/delete-monitoring.sh
 
 .PHONY: stop
 stop: ## Stop node VMs

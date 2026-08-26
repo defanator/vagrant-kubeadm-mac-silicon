@@ -73,6 +73,11 @@ sudo systemctl start containerd
 
 echo "containerd runtime installed susccessfully"
 
+# additional commands passed via env
+if [ -n "${AUXILIARY_COMMANDS-}" ]; then
+    /bin/bash -c "${AUXILIARY_COMMANDS}"
+fi
+
 cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes

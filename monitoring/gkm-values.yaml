@@ -1,0 +1,91 @@
+cluster:
+  name: "mycluster"
+
+global:
+  scrapeInterval: 15s
+
+alloy-operator:
+  deploy: true
+
+destinations:
+  prometheus:
+    type: "prometheus"
+    url: "http://prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
+  loki:
+    type: "loki"
+    url: "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
+
+collectors:
+  alloy-metrics:
+    presets:
+      - clustered
+      - statefulset
+    alloy:
+      reporting:
+        enabled: false
+      extraEnv:
+        - name: FOO
+          value: "bar"
+  alloy-logs:
+    presets:
+      - filesystem-log-reader
+      - daemonset
+    alloy:
+      reporting:
+        enabled: false
+  alloy-singleton:
+    presets:
+      - singleton
+    alloy:
+      reporting:
+        enabled: false
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+
+hostMetrics:
+  collector: alloy-metrics
+  enabled: true
+  linuxHosts:
+    enabled: true
+    metricsTuning:
+      includeMetrics:
+      - node_uname_info
+      - node_load1
+      - node_load5
+      - node_load15
+      - node_pressure_.*
+      - node_time_seconds
+      - node_boot_time_seconds
+      - node_disk_reads_completed_total
+      - node_disk_writes_completed_total
+      - node_disk_read_bytes_total
+      - node_disk_written_bytes_total
+      - node_disk_io_time_seconds_total
+      - node_vmstat_oom_kill
+      - node_vmstat_pgfault
+      - node_vmstat_pgmajfault
+      - node_context_switches_total
+      - node_intr_total
+
+nodeLogs:
+  enabled: true
+  collector: alloy-logs
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+
+clusterEvents:
+  collector: alloy-singleton
+  enabled: true
+
+selfReporting:
+  enabled: false

@@ -38,3 +38,6 @@ state.env
 # linkerd temporary files
 linkerd/*.crt
 linkerd/*.key
+
+# local direnv bits
+.envrc-local

@@ -63,7 +63,8 @@ Vagrant.configure("2") do |config|
         "KUBERNETES_VERSION" => settings["software"]["kubernetes"],
         "KUBERNETES_VERSION_SHORT" => settings["software"]["kubernetes"][0..3],
         "OS" => settings["software"]["os"],
-        "VM_NAME" => controlplane.vm.hostname
+        "VM_NAME" => controlplane.vm.hostname,
+        "AUXILIARY_COMMANDS" => ENV['COMMON_AUXILIARY_COMMANDS']
       },
       path: "scripts/common.sh"
     controlplane.vm.provision "shell",
@@ -98,7 +99,8 @@ Vagrant.configure("2") do |config|
           "KUBERNETES_VERSION" => settings["software"]["kubernetes"],
           "KUBERNETES_VERSION_SHORT" => settings["software"]["kubernetes"][0..3],
           "OS" => settings["software"]["os"],
-          "VM_NAME" => node.vm.hostname
+          "VM_NAME" => node.vm.hostname,
+          "AUXILIARY_COMMANDS" => ENV['COMMON_AUXILIARY_COMMANDS']
         },
         path: "scripts/common.sh"
       node.vm.provision "shell", path: "scripts/node.sh"

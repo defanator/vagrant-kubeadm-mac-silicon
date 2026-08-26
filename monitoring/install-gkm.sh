@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-set -x
+set -xeuo pipefail
 
-kubectl apply -f gkm/service-account.yaml
+kubectl apply -f monitoring/gkm-service-account.yaml
 
 helm install gkm grafana/k8s-monitoring \
   --version 4.1.7 \
   --namespace monitoring \
   --create-namespace \
-  --values gkm/values.yaml
+  --values monitoring/gkm-values.yaml

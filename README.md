@@ -99,6 +99,53 @@ Open the site in your browser:
 http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#/login
 ```
 
+## Install Prometheus, Loki, and Grafana
+
+To install a standalone monitoring stack (Prometheus + Loki + Grafana), run:
+
+```shell
+make install-monitoring
+```
+
+This deploys resources in the `monitoring` namespace:
+- Prometheus Deployment + Service (ephemeral local storage)
+- Loki Deployment + Service (ephemeral local storage)
+- Grafana Deployment + NodePort Service
+
+Grafana is preconfigured with:
+- a Prometheus datasource
+- a Loki datasource
+- anonymous access enabled with Admin role
+
+To get the Grafana endpoint:
+
+```shell
+kubectl -n monitoring get svc grafana
+kubectl get nodes -o wide
+```
+
+Open Grafana in your browser:
+
+```shell
+http://<NODE_IP>:32000
+```
+
+Default Grafana credentials:
+
+```text
+admin / admin
+```
+
+Anonymous access is also enabled, so the UI is reachable without signing in.
+
+Loki is deployed without a log collector in this setup. The datasource is available in Grafana, but actual pod or node logs will not appear until a collector such as Promtail or Alloy is added.
+
+To remove this monitoring stack:
+
+```shell
+make uninstall-monitoring
+```
+
 ## To shutdown the cluster,
 
 ```shell
